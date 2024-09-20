@@ -47,82 +47,82 @@ public class VacationCalcController {
         }
     }
     
-    // startDate format: yyyy-mm-dd; 
-    // ответ - строка, количество отпускных фиксированное и меняется только дата выхода из отпуска при пересечении с выходными
-    @GetMapping("/calculate")
-    public String calculateVacation( 
-            @RequestParam(name = "salary")                      double salary,
-            @RequestParam(name = "days")                        int days,
-            @RequestParam(name = "startDate", required = false) String startDate) {
-        double dailySalary = salary / 29.3; // 29.3 - среднее кол-во дней в месяце (ст. 139 ТК РФ)
-        double vacationAmount = Math.round(dailySalary * days * 100.0) / 100.0;
-        if (startDate != null) {
-            try {
-                LocalDate start = LocalDate.parse(startDate);
-                String response = "<h2>Дата начала отпуска: " + startDate 
-                                + "<br>Дата выхода из отпуска: " + calculateDateOfRelease(start, days) 
-                                + "<br>Сумма отпускных: " + vacationAmount + "<h2>";
-                return response;
-            } catch (java.time.format.DateTimeParseException ex) {
-                System.out.println(ex.getMessage());
-                return "<h2 style=\"color:red\">Неверный формат даты<br>Пример: 2024-01-01 <h2>";
-            }
-        } else {
-            return "Сумма отпускных: " + vacationAmount;
-        }
-    }
-    
-    private LocalDate calculateDateOfRelease(LocalDate startDate, int days) {
-        LocalDate releaseDate = startDate;
-        
-        for (int i = 0; i < days; i++) {
-            if (isHoliday(releaseDate)) {
-                days++;
-            }
-            releaseDate = releaseDate.plusDays(1);
-        }
-        return releaseDate;
-    }
-    
-    // Учитывая, что рабочая неделя пятидневная
-    private boolean isHoliday(LocalDate date) {
-        return date.getDayOfWeek().getValue() >= 6 || holidays.contains(date);
-    }
-    
-//    // ответ - число типа double, количество отпускных уменьшается при пересечнии с выходными
+//    // startDate format: yyyy-mm-dd; 
+//    // ответ - строка, количество отпускных фиксированное и меняется только
+//    // дата выхода из отпуска при пересечении с выходными
 //    @GetMapping("/calculate")
-//    public double calculateVacationAmount( 
+//    public String calculateVacation( 
 //            @RequestParam(name = "salary")                      double salary,
 //            @RequestParam(name = "days")                        int days,
 //            @RequestParam(name = "startDate", required = false) String startDate) {
 //        double dailySalary = salary / 29.3; // 29.3 - среднее кол-во дней в месяце (ст. 139 ТК РФ)
+//        double vacationAmount = Math.round(dailySalary * days * 100.0) / 100.0;
 //        if (startDate != null) {
 //            try {
 //                LocalDate start = LocalDate.parse(startDate);
-//                double vacationAmount = Math.round(dailySalary * days * 100.0) / 100.0;
-//                
-//                return vacationAmount * calculateWorkingDays(start, days);
+//                String response = "<h2>Дата начала отпуска: " + startDate 
+//                                + "<br>Дата выхода из отпуска: " + calculateDateOfRelease(start, days) 
+//                                + "<br>Сумма отпускных: " + vacationAmount + "<h2>";
+//                return response;
 //            } catch (java.time.format.DateTimeParseException ex) {
 //                System.out.println(ex.getMessage());
-//                return 0;
+//                return "<h2 style=\"color:red\">Неверный формат даты<br>Пример: 2024-01-01 <h2>";
 //            }
 //        } else {
-//            return Math.round(dailySalary * days * 100.0) / 100.0;
+//            return "Сумма отпускных: " + vacationAmount;
 //        }
 //    }
-//    private long calculateWorkingDays(LocalDate startDate, int days) {
-//        int workingDays = 0;
-//        LocalDate currentDate = startDate;
+//    
+//    private LocalDate calculateDateOfRelease(LocalDate startDate, int days) {
+//        LocalDate releaseDate = startDate;
 //        
 //        for (int i = 0; i < days; i++) {
-//            if (isWorkingDay(currentDate)) {
-//                workingDays++;
+//            if (isHoliday(releaseDate)) {
+//                days++;
 //            }
-//            currentDate = currentDate.plusDays(1);
+//            releaseDate = releaseDate.plusDays(1);
 //        }
-//        return workingDays;
+//        return releaseDate;
 //    }
-//    private boolean isWorkingDay(LocalDate date) {
-//        return !(date.getDayOfWeek().getValue() >= 6 || holidays.contains(date));
+//    
+//    // Учитывая, что рабочая неделя пятидневная
+//    private boolean isHoliday(LocalDate date) {
+//        return date.getDayOfWeek().getValue() >= 6 || holidays.contains(date);
 //    }
+    
+    // startDate format: yyyy-mm-dd; 
+    // ответ - число типа double, количество отпускных уменьшается при пересечнии с выходными
+    @GetMapping("/calculate")
+    public double calculateVacationAmount( 
+            @RequestParam(name = "salary")                      double salary,
+            @RequestParam(name = "days")                        int days,
+            @RequestParam(name = "startDate", required = false) String startDate) {
+        double dailySalary = salary / 29.3; // 29.3 - среднее кол-во дней в месяце (ст. 139 ТК РФ)
+        if (startDate != null) {
+            try {
+                LocalDate start = LocalDate.parse(startDate);
+                return Math.round(dailySalary * calculateWorkingDays(start, days) * 100.0) / 100.0;
+            } catch (java.time.format.DateTimeParseException ex) {
+                System.out.println(ex.getMessage());
+                return 0;
+            }
+        } else {
+            return Math.round(dailySalary * days * 100.0) / 100.0;
+        }
+    }
+    private long calculateWorkingDays(LocalDate startDate, int days) {
+        int workingDays = 0;
+        LocalDate currentDate = startDate;
+        
+        for (int i = 0; i < days; i++) {
+            if (isWorkingDay(currentDate)) {
+                workingDays++;
+            }
+            currentDate = currentDate.plusDays(1);
+        }
+        return workingDays;
+    }
+    private boolean isWorkingDay(LocalDate date) {
+        return !(date.getDayOfWeek().getValue() >= 6 || holidays.contains(date));
+    }
 }
